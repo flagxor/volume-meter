@@ -23,15 +23,17 @@ SOFTWARE.
 */
 var audioContext = null;
 var meter = null;
-var canvasContext = null;
+var counter = null;
 var WIDTH=500;
 var HEIGHT=50;
 var rafID = null;
+var progress = 0;
+var last = 0;
 
 window.onload = function() {
 
-    // grab our canvas
-	canvasContext = document.getElementById( "meter" ).getContext("2d");
+    // grab our counter
+    counter = document.getElementById("counter");
 	
     // monkeypatch Web Audio
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -85,18 +87,18 @@ function gotStream(stream) {
     drawLoop();
 }
 
-function drawLoop( time ) {
-    // clear the background
-    canvasContext.clearRect(0,0,WIDTH,HEIGHT);
+function drawLoop(time) {
+    if (time !== undefined) {
+      if (meter.volume > 0.1) {
+        progress += (time - last);
+      }
+      last = time;
+    }
 
-    // check if we're currently clipping
-    if (meter.checkClipping())
-        canvasContext.fillStyle = "red";
-    else
-        canvasContext.fillStyle = "green";
-
-    // draw a bar based on the current volume
-    canvasContext.fillRect(0, 0, meter.volume*WIDTH*1.4, HEIGHT);
+    var t = Math.floor(progress / 1000);
+    var seconds = t % 60;
+    var minutes = Math.floor(t / 60) % 60;
+    counter.innerText = '' + minutes + ':' + ('0' + seconds).slice(-2);
 
     // set up the next visual callback
     rafID = window.requestAnimationFrame( drawLoop );
